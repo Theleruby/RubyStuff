@@ -230,6 +230,7 @@ function RubyStuffSocial:SetupFrame()
 	managerFrame.changeNoteButton:SetSize(80, 24) -- width, height
 	managerFrame.changeNoteButton:SetScript("OnClick", function() RubyStuffSocial:OnEditNoteButtonClick() end)
 	managerFrame.changeNoteButton:Disable()
+	managerFrame:SetFrameStrata(HIGH)
 end
 
 local selectedName = nil
