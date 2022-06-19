@@ -1,0 +1,13 @@
+## Interface: 30300
+## Title: RubyStuff Social |cff8080ff2.0.0|r
+## Author: Theleruby
+## Version: 2.0.0
+## Notes: Social manager for World of Warcraft
+## X-Embeds: Ace3
+## RequiredDeps: Prat-3.0
+## DefaultState: Enabled
+## LoadOnDemand: 0
+## LoadWith: Prat-3.0
+## SavedVariables: CustomPlayerNotes
+embeds.xml
+RubyStuffSocial.lua
