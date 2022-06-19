@@ -5,6 +5,13 @@ Feel free to make feature requests and report bugs. I'll try to fix anything rep
 
 Everything here is public domain (at least the parts I wrote) so you can also do what you want with it.
 
+## Latest Updates
+RubyStuff Social is at version 2.0.0 - 19 June 2022
+
+## How to install or update the addon(s)
+
+Download the repo from GitHub as a zip file. Put the addons you want into the AddOns folder.
+
 ----
 
 ## RubyStuff Social
