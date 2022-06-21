@@ -89,9 +89,13 @@ local RAID_CLASS_COLORS = {
 ----- SETUP METHODS
 
 function RubyStuffSocial:OnInitialize()
-	self:PrepopulateDatabase()
 	self:SetupFrame()
+	self:PrepopulateDatabase()
 	self:RegisterEvent("GUILD_ROSTER_UPDATE", "UpdateEverything")
+	self:RegisterEvent("GUILD_NEWS_UPDATE", "UpdateEverything")
+	self:RegisterEvent("GUILD_RANKS_UPDATE", "UpdateEverything")
+	self:RegisterEvent("PLAYER_GUILD_UPDATE", "UpdateEverything")
+	self:RegisterEvent("GUILD_MOTD", "UpdateEverything")
 	self:RegisterEvent("FRIENDLIST_UPDATE", "UpdateEverything")
 	self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "RequestUpdatesFromServer")
 	self:RequestUpdatesFromServer()
@@ -100,6 +104,7 @@ end
 
 function RubyStuffSocial:SetupFrame()
 	managerFrame:Hide()
+	playerName, _ = UnitName("player")
 	tinsert(UISpecialFrames, "RubyStuffSocialManager_Frame")
 	-- Base frame
 	managerFrame:SetPoint("TOPLEFT",UIParent,"CENTER",-440,200)
@@ -115,7 +120,11 @@ function RubyStuffSocial:SetupFrame()
 	-- Title
 	managerFrame.title = managerFrame:CreateFontString(nil, "ARTWORK", "GameTooltipText")
 	managerFrame.title:SetPoint("TOPLEFT", 8, -10)
-	managerFrame.title:SetText("Social List")
+	managerFrame.title:SetText(playerName .. "'s Social List")
+	-- Title
+	managerFrame.playerCountText = managerFrame:CreateFontString(nil, "ARTWORK", "GameTooltipText")
+	managerFrame.playerCountText:SetPoint("TOPRIGHT", -50, -10)
+	managerFrame.playerCountText:SetText("")
 	-- Line
 	managerFrame.line = managerFrame:CreateTexture()
 	managerFrame.line:SetTexture(.8, .8, .8, .8)
@@ -147,7 +156,7 @@ function RubyStuffSocial:SetupFrame()
 	managerFrame.scrollbar:SetPoint("BOTTOM", managerFrame.scrolldownbutton, "TOP", 0, 2);
 	managerFrame.scrollFrame:SetScrollChild(managerFrame.scrollChild);
 	managerFrame.scrollFrame:ClearAllPoints()
-	managerFrame.scrollFrame:SetPoint("TOPLEFT", managerFrame, "TOPLEFT", 4, -34);
+	managerFrame.scrollFrame:SetPoint("TOPLEFT", managerFrame, "TOPLEFT", 4, -74);
 	managerFrame.scrollFrame:SetPoint("BOTTOMRIGHT", managerFrame, "BOTTOMRIGHT", -4, 34);
 	-- Line2
 	managerFrame.line2 = managerFrame:CreateTexture()
@@ -163,14 +172,38 @@ function RubyStuffSocial:SetupFrame()
 	managerFrame.removeNoteButton:Disable()
 	managerFrame.changeNoteButton = CreateFrame("Button", "RubyStuffSocialManager_EditNoteButton", managerFrame, "UIPanelButtonTemplate")
 	managerFrame.changeNoteButton:SetText("Edit note")
-	managerFrame.changeNoteButton:SetPoint("BOTTOMRIGHT", managerFrame, "BOTTOMRIGHT", -128, 5)
+	managerFrame.changeNoteButton:SetPoint("BOTTOMRIGHT", managerFrame, "BOTTOMRIGHT", -122, 5)
 	managerFrame.changeNoteButton:SetSize(80, 24) -- width, height
 	managerFrame.changeNoteButton:SetScript("OnClick", function() RubyStuffSocial:OnEditNoteButtonClick() end)
 	managerFrame.changeNoteButton:Disable()
+	managerFrame.whisperButton = CreateFrame("Button", "RubyStuffSocialManager_EditNoteButton", managerFrame, "UIPanelButtonTemplate")
+	managerFrame.whisperButton:SetText("Whisper")
+	managerFrame.whisperButton:SetPoint("BOTTOMLEFT", managerFrame, "BOTTOMLEFT", 3, 5)
+	managerFrame.whisperButton:SetSize(80, 24) -- width, height
+	managerFrame.whisperButton:SetScript("OnClick", function() RubyStuffSocial:OnWhisperButtonClick() end)
+	managerFrame.whisperButton:Disable()
 	managerFrame:SetFrameStrata(HIGH)
+	-- Line3
+	managerFrame.line3 = managerFrame:CreateTexture()
+	managerFrame.line3:SetTexture(.8, .8, .8, .8)
+	managerFrame.line3:SetPoint("TOPLEFT",4,-70)
+	managerFrame.line3:SetSize(872, 1)
+	-- Guild MOTD
+	managerFrame.guildName = managerFrame:CreateFontString(nil, "ARTWORK", "GameTooltipText")
+	managerFrame.guildName:SetPoint("TOPLEFT", 8, -37)
+	managerFrame.guildName:SetPoint("BOTTOMRIGHT", managerFrame, "TOPRIGHT", -4, -49)
+	managerFrame.motd = managerFrame:CreateFontString(nil, "ARTWORK", "GameTooltipText")
+	managerFrame.motd:SetPoint("TOPLEFT", 8, -51)
+	managerFrame.motd:SetPoint("BOTTOMRIGHT", managerFrame, "TOPRIGHT", -4, -63)
+end
+
+function RubyStuffSocial:ResetGuildMotd()
+	managerFrame.guildName:SetText("|cff808080Guild information unavailable")
+	managerFrame.motd:SetText("")
 end
 
 function RubyStuffSocial:PrepopulateDatabase()
+	RubyStuffSocial:ResetGuildMotd()
 	if not CustomPlayerNotes then
 		CustomPlayerNotes = {}
 	end
@@ -190,6 +223,7 @@ function RubyStuffSocial:EnsurePlayerExists(player)
 			['level'] = '',
 			['online'] = -1,
 			['rank'] = '',
+			['guildie'] = 0,
 			['offlineString'] = 'Offline',
 			['location'] = ''
 		}
@@ -224,6 +258,8 @@ function RubyStuffSocial:RequestUpdatesFromServer()
 end
 
 function RubyStuffSocial:UpdateEverything()
+	NAME_DATABASE = {}
+	RubyStuffSocial:PrepopulateDatabase()
 	RubyStuffSocial:UpdateGuild()
 	RubyStuffSocial:UpdateFriendList()
 	RubyStuffSocial:UpdateFrame()
@@ -241,6 +277,7 @@ function RubyStuffSocial:UpdateNameEntry(Name, Level, Class, Zone, Online, Avail
 	end
 	if Rank then
 		NAME_DATABASE[Name]['rank'] = Rank
+		NAME_DATABASE[Name]['guildie'] = 1
 	end
 	if offlineString then
 		NAME_DATABASE[Name]['offlineString'] = offlineString
@@ -295,6 +332,17 @@ function RubyStuffSocial:UpdateGuild()
 				self:UpdateNameEntry(Name, Level, Class, Zone, Online, 4, Status, Note, Rank, offlineString)
 			end
 		end
+		guildName, guildRankName, _ = GetGuildInfo("player")
+		if guildName then
+			motd = GetGuildRosterMOTD()
+			managerFrame.guildName:SetText(guildRankName .. " of <" .. guildName .. ">")
+			if (not motd) or (motd == "") then
+				motd = "No message of the day has been set"
+			end
+			managerFrame.motd:SetText("|cff808080" .. motd)
+		end
+	else
+		self:ResetGuildMotd()
 	end
 end
 
@@ -340,9 +388,17 @@ function RubyStuffSocial:UpdateFrame()
 		local line_height = 15
 		local elements = 0
 		local i = -4
+		local onlinePlayers = 0
+		local totalPlayers = 0
+		local onlineGuildies = 0
+		local totalGuildies = 0
 		for tableIndex=1,#sortedTable do
+			totalPlayers = totalPlayers + 1
 			k = sortedTable[tableIndex][1]
 			v = sortedTable[tableIndex][2]
+			if v['guildie'] == 1 then
+				totalGuildies = totalGuildies + 1
+			end
 			if not FRAMES[k] then
 				FRAMES[k] = CreateFrame("Button", nil, managerFrame.scrollChild)
 				FRAMES[k].playerName = k
@@ -381,12 +437,18 @@ function RubyStuffSocial:UpdateFrame()
 			end
 			-- name
 			if k == pName then
-				FRAMES[k].text_NAME:SetTextColor(0.8, 0.8, 0, 1)
+				FRAMES[k].text_NAME:SetTextColor(1, 0.8235, 0, 1)
 			else
 				FRAMES[k].text_NAME:SetTextColor(1, 1, 1, 1)
 			end
 			FRAMES[k].text_NAME:SetText(k)
 			-- player status
+			if v['online'] > 0 then
+				onlinePlayers = onlinePlayers + 1
+				if v['guildie'] == 1 then
+					onlineGuildies = onlineGuildies + 1
+				end
+			end
 			if v['online'] == 4 then
 				FRAMES[k].text_ONLINE:SetText('Online')
 				FRAMES[k].text_ONLINE:SetTextColor(0, 1, 1, 1)
@@ -447,6 +509,7 @@ function RubyStuffSocial:UpdateFrame()
 			elements = elements + 1
 		end
 		managerFrame.scrollChild:SetSize(managerFrame.scrollFrame:GetWidth(), 8 + (elements * line_height ));
+		managerFrame.playerCountText:SetText(onlinePlayers .. "/" .. totalPlayers .. " |cff808080(" .. onlineGuildies .. "/" .. totalGuildies .. ")|r online")
 		if not foundSelectedName then
 			self:SelectElement(nil)
 		end
@@ -454,6 +517,12 @@ function RubyStuffSocial:UpdateFrame()
 end
 
 ----- UI FRAME METHODS
+
+function RubyStuffSocial:OnWhisperButtonClick()
+	if selectedName then
+		ChatFrame_OpenChat("/w " .. selectedName .. " ")
+	end
+end
 
 function RubyStuffSocial:OnEditNoteButtonClick()
 	nameBeingEdited = selectedName
@@ -466,6 +535,7 @@ function RubyStuffSocial:OnRemoveNoteButtonClick()
 		self:SetCustomPlayerNote(selectedName, nil)
 	end
 	self:SelectElement(selectedName)
+	self:UpdateEverything()
 end
 
 function RubyStuffSocial:UpdateNoteFromEditBox(note)
@@ -473,6 +543,7 @@ function RubyStuffSocial:UpdateNoteFromEditBox(note)
 		self:SetCustomPlayerNote(nameBeingEdited, note)
 	end
 	self:SelectElement(selectedName)
+	self:UpdateEverything()
 end
 
 function RubyStuffSocial:Toggle()
@@ -503,9 +574,11 @@ function RubyStuffSocial:SelectElement(name)
 			managerFrame.removeNoteButton:Disable()
 		end
 		managerFrame.changeNoteButton:Enable()
+		managerFrame.whisperButton:Enable()
 	else
 		managerFrame.removeNoteButton:Disable()
 		managerFrame.changeNoteButton:Disable()
+		managerFrame.whisperButton:Disable()
 	end
 	self:UpdateFrame()
 end
