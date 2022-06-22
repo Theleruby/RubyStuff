@@ -300,7 +300,12 @@ end
 function RubyStuffSocial:UpdateFriendList()
 	for i = 1, GetNumFriends() do
 		Name, Level, Class, Zone, Connected, Status = GetFriendInfo(i)
-		self:UpdateNameEntry(Name, Level, Class, Zone, Connected, 3, Status, '', nil, nil)
+		if Name == nil then
+			-- sometimes the friend data hasn't fully downloaded yet if this gets fired on login; getting friend info at this point returns nil.
+			-- this check protects against a lua error from trying to populate the table with nil values
+		else
+			self:UpdateNameEntry(Name, Level, Class, Zone, Connected, 3, Status, '', nil, nil)
+		end
 	end
 end
 
