@@ -91,12 +91,13 @@ local RAID_CLASS_COLORS = {
 function RubyStuffSocial:OnInitialize()
 	self:SetupFrame()
 	self:PrepopulateDatabase()
-	self:RegisterEvent("GUILD_ROSTER_UPDATE", "UpdateEverything")
+	self:RegisterEvent("FRIENDLIST_UPDATE", "UpdateEverything")
+	self:RegisterEvent("GUILD_MOTD", "UpdateEverything")
 	self:RegisterEvent("GUILD_NEWS_UPDATE", "UpdateEverything")
 	self:RegisterEvent("GUILD_RANKS_UPDATE", "UpdateEverything")
+	self:RegisterEvent("GUILD_ROSTER_UPDATE", "UpdateEverything")
+	self:RegisterEvent("PLAYER_FLAGS_CHANGED", "UpdateEverything")
 	self:RegisterEvent("PLAYER_GUILD_UPDATE", "UpdateEverything")
-	self:RegisterEvent("GUILD_MOTD", "UpdateEverything")
-	self:RegisterEvent("FRIENDLIST_UPDATE", "UpdateEverything")
 	self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "RequestUpdatesFromServer")
 	self:RequestUpdatesFromServer()
 	self:UpdateEverything()
@@ -262,10 +263,14 @@ function RubyStuffSocial:UpdateEverything()
 	RubyStuffSocial:PrepopulateDatabase()
 	RubyStuffSocial:UpdateGuild()
 	RubyStuffSocial:UpdateFriendList()
+	RubyStuffSocial:UpdateLocalPlayer()
 	RubyStuffSocial:UpdateFrame()
 end
 
 function RubyStuffSocial:UpdateNameEntry(Name, Level, Class, Zone, Online, AvailableValue, Status, Note, Rank, offlineString)
+	if (not Name) or (Name == "") then
+		return
+	end
 	self:EnsurePlayerExists(Name)
 	if Note then
 		NAME_DATABASE[Name]['guildNote'] = Note
@@ -294,6 +299,20 @@ function RubyStuffSocial:UpdateNameEntry(Name, Level, Class, Zone, Online, Avail
 		end	
 	else
 		NAME_DATABASE[Name]['online'] = 0
+	end
+end
+
+function RubyStuffSocial:UpdateLocalPlayer()
+	playerName, _ = UnitName("player")
+	if playerName then
+		playerStatus = '' -- todo available/busy/away
+		if UnitIsAFK("player") then
+			playerStatus = "<Away>"
+		end
+		if UnitIsDND("player") then
+			playerStatus = "<Busy>"
+		end
+		self:UpdateNameEntry(playerName, UnitLevel("player"), UnitClass("player"), GetZoneText(), true, 3, playerStatus, '', nil, nil)
 	end
 end
 
@@ -352,7 +371,9 @@ function RubyStuffSocial:UpdateGuild()
 end
 
 local function SortTable(a, b)
-	if a[2]['online'] == b[2]['online'] then
+	a_online = a[2]['online'] > 0
+	b_online = b[2]['online'] > 0
+	if a_online == b_online then
 		a_note = RubyStuffSocial:GetPlayerNote(a[2]['name'])
 		if not a_note then
 			a_note = ""
@@ -369,7 +390,7 @@ local function SortTable(a, b)
 			return a_note < b_note
 		end
 	else
-		return a[2]['online'] > b[2]['online']
+		return a_online
 	end
 end
 
@@ -413,13 +434,13 @@ function RubyStuffSocial:UpdateFrame()
 				FRAMES[k].text_NAME = FRAMES[k]:CreateFontString(nil, "ARTWORK", "GameTooltipText")
 				FRAMES[k].text_NAME:SetPoint("TOPLEFT", 2, -1)
 				FRAMES[k].text_ONLINE = FRAMES[k]:CreateFontString(nil, "ARTWORK", "GameTooltipText")
-				FRAMES[k].text_ONLINE:SetPoint("TOPLEFT", 100, -1)
+				FRAMES[k].text_ONLINE:SetPoint("TOPLEFT", 90, -1)
 				FRAMES[k].text_RANK = FRAMES[k]:CreateFontString(nil, "ARTWORK", "GameTooltipText")
-				FRAMES[k].text_RANK:SetPoint("TOPLEFT", 210, -1)
+				FRAMES[k].text_RANK:SetPoint("TOPLEFT", 190, -1)
 				FRAMES[k].text_NOTE = FRAMES[k]:CreateFontString(nil, "ARTWORK", "GameTooltipText")
-				FRAMES[k].text_NOTE:SetPoint("TOPLEFT", 270, -1)
+				FRAMES[k].text_NOTE:SetPoint("TOPLEFT", 280, -1)
 				FRAMES[k].text_LEVEL = FRAMES[k]:CreateFontString(nil, "ARTWORK", "GameTooltipText")
-				FRAMES[k].text_LEVEL:SetPoint("TOPLEFT", 506, -1)
+				FRAMES[k].text_LEVEL:SetPoint("TOPLEFT", 516, -1)
 				FRAMES[k].text_CLASS = FRAMES[k]:CreateFontString(nil, "ARTWORK", "GameTooltipText")
 				FRAMES[k].text_CLASS:SetPoint("TOPLEFT", 550, -1)
 				FRAMES[k].text_ZONE = FRAMES[k]:CreateFontString(nil, "ARTWORK", "GameTooltipText")
