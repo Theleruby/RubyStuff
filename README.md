@@ -20,7 +20,7 @@ The social list window can be toggled by setting a custom keybind in the keybind
 
 The addon then integrates with Prat 3.0 in order to display the note for each player next to their name in the chat window. For this part to work, you need to enable the module in Prat's settings.
 
-Note that if you have a note set for a character, but they're not in the friend list or guild of the character you're logged in as, they will be listed in the social list with unknown status. This is a WoW client limitation. If you want to see the person's status you can add them to your friend list.
+Note that if you have a note set for a character, but they're not in the friend list or guild of the character you're logged in as, they will be listed in the social list with unknown status. If you want to see the person's status you can add them to your friend list.
 
 ### Screenshots
 
