@@ -8,7 +8,7 @@ Everything here is public domain (at least the parts I wrote) so you can also do
 To install or update the addons, download the repo from GitHub as a zip file and put the addons you want into the AddOns folder.
 
 ## RubyStuff Social
-**Last update:** 2.0.5 (22 June 2022)
+**Last update:** 2.0.6 (22 June 2022)
 
 **Dependencies:** Prat-3.0
 

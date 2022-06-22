@@ -157,7 +157,7 @@ function RubyStuffSocial:SetupFrame()
 	managerFrame.scrollbar:SetPoint("BOTTOM", managerFrame.scrolldownbutton, "TOP", 0, 2);
 	managerFrame.scrollFrame:SetScrollChild(managerFrame.scrollChild);
 	managerFrame.scrollFrame:ClearAllPoints()
-	managerFrame.scrollFrame:SetPoint("TOPLEFT", managerFrame, "TOPLEFT", 4, -74);
+	managerFrame.scrollFrame:SetPoint("TOPLEFT", managerFrame, "TOPLEFT", 4, -92);
 	managerFrame.scrollFrame:SetPoint("BOTTOMRIGHT", managerFrame, "BOTTOMRIGHT", -4, 34);
 	-- Line2
 	managerFrame.line2 = managerFrame:CreateTexture()
@@ -183,6 +183,11 @@ function RubyStuffSocial:SetupFrame()
 	managerFrame.whisperButton:SetSize(80, 24) -- width, height
 	managerFrame.whisperButton:SetScript("OnClick", function() RubyStuffSocial:OnWhisperButtonClick() end)
 	managerFrame.whisperButton:Disable()
+	managerFrame.resetSortButton = CreateFrame("Button", "RubyStuffSocialManager_RemoveNoteButton", managerFrame, "UIPanelButtonTemplate")
+	managerFrame.resetSortButton:SetText("Reset sort order")
+	managerFrame.resetSortButton:SetPoint("BOTTOMLEFT", managerFrame, "BOTTOMLEFT", 82, 5)
+	managerFrame.resetSortButton:SetSize(120, 24) -- width, height
+	managerFrame.resetSortButton:SetScript("OnClick", function() RubyStuffSocial:OnResetSortButtonClick() end)
 	managerFrame:SetFrameStrata(HIGH)
 	-- Line3
 	managerFrame.line3 = managerFrame:CreateTexture()
@@ -196,6 +201,46 @@ function RubyStuffSocial:SetupFrame()
 	managerFrame.motd = managerFrame:CreateFontString(nil, "ARTWORK", "GameTooltipText")
 	managerFrame.motd:SetPoint("TOPLEFT", 8, -51)
 	managerFrame.motd:SetPoint("BOTTOMRIGHT", managerFrame, "TOPRIGHT", -4, -63)
+	-- Line4
+	managerFrame.line4 = managerFrame:CreateTexture()
+	managerFrame.line4:SetTexture(.4, .4, .4, .8)
+	managerFrame.line4:SetPoint("TOPLEFT",4,-90)
+	managerFrame.line4:SetSize(872, 1)
+	-- Sort Buttons
+	managerFrame.sortButtons = {}
+	managerFrame.sortButtons['name'] = RubyStuffSocial:CreateSortButton(managerFrame, 'name', 84, 8, 'Name')
+	managerFrame.sortButtons['online'] = RubyStuffSocial:CreateSortButton(managerFrame, 'online', 10, 96, '-')
+	managerFrame.sortButtons['totalHoursOffline'] = RubyStuffSocial:CreateSortButton(managerFrame, 'totalHoursOffline', 86, 106, 'Last Online')
+	managerFrame.sortButtons['rankIndex'] = RubyStuffSocial:CreateSortButton(managerFrame, 'rankIndex', 86, 196, 'Rank')
+	managerFrame.sortButtons['note'] = RubyStuffSocial:CreateSortButton(managerFrame, 'note', 232, 286, 'Note')
+	managerFrame.sortButtons['level'] = RubyStuffSocial:CreateSortButton(managerFrame, 'level', 30, 522, 'Lv')
+	managerFrame.sortButtons['class'] = RubyStuffSocial:CreateSortButton(managerFrame, 'class', 96, 556, 'Class')
+	managerFrame.sortButtons['location'] = RubyStuffSocial:CreateSortButton(managerFrame, 'location', 186, 656, 'Zone')
+	RubyStuffSocial:ResetSortingOrder()
+end
+
+function RubyStuffSocial:CreateSortButton(managerFrame, sortColumnID, width, xposition, title)
+	but = CreateFrame("Button", nil, managerFrame)
+	but.sortColumnID = sortColumnID
+	but:SetSize(width, 18)
+	but:SetPoint("TOPLEFT", xposition, -72)
+	but.text = but:CreateFontString(nil, "ARTWORK", "GameTooltipText")
+	but.text:SetPoint("TOPLEFT", 2, -3)
+	but.text:SetText(title)
+	but:EnableMouse(1)
+	but.highlightTexture = but:CreateTexture(nil)
+	but.highlightTexture:SetAllPoints(true)
+	but.highlightTexture:SetTexture(0.5, 0.5, 0.5, 0.5)
+	but.highlightTexture:Hide()
+	but:SetScript("OnClick", function(self) RubyStuffSocial:SelectSortColumn(self) end)
+	but:SetScript("OnEnter", function(self) self.highlightTexture:Show() end)
+	but:SetScript("OnLeave", function(self) self.highlightTexture:Hide() end)
+	but:EnableMouse(1)
+	but.highlightTexture = but:CreateTexture(nil)
+	but.highlightTexture:SetAllPoints(true)
+	but.highlightTexture:SetTexture(0.5, 0.5, 0.5, 0.5)
+	but.highlightTexture:Hide()
+	return but
 end
 
 function RubyStuffSocial:ResetGuildMotd()
@@ -221,10 +266,12 @@ function RubyStuffSocial:EnsurePlayerExists(player)
 			['name'] = player,
 			['guildNote'] = '',
 			['class'] = '',
-			['level'] = '',
+			['level'] = -1,
 			['online'] = -1,
 			['rank'] = '',
+			['rankIndex'] = -3,
 			['guildie'] = 0,
+			['totalHoursOffline'] = 999999999,
 			['offlineString'] = 'Offline',
 			['location'] = ''
 		}
@@ -267,7 +314,7 @@ function RubyStuffSocial:UpdateEverything()
 	RubyStuffSocial:UpdateFrame()
 end
 
-function RubyStuffSocial:UpdateNameEntry(Name, Level, Class, Zone, Online, AvailableValue, Status, Note, Rank, offlineString)
+function RubyStuffSocial:UpdateNameEntry(Name, Level, Class, Zone, Online, AvailableValue, Status, Note, Rank, RankIndex, offlineString, totalHoursOffline)
 	if (not Name) or (Name == "") then
 		return
 	end
@@ -282,10 +329,16 @@ function RubyStuffSocial:UpdateNameEntry(Name, Level, Class, Zone, Online, Avail
 	end
 	if Rank then
 		NAME_DATABASE[Name]['rank'] = Rank
+		NAME_DATABASE[Name]['rankIndex'] = RankIndex
 		NAME_DATABASE[Name]['guildie'] = 1
+	elseif NAME_DATABASE[Name]['rankIndex'] < 0 then
+		NAME_DATABASE[Name]['rankIndex'] = RankIndex
 	end
 	if offlineString then
 		NAME_DATABASE[Name]['offlineString'] = offlineString
+	end
+	if totalHoursOffline then
+		NAME_DATABASE[Name]['totalHoursOffline'] = totalHoursOffline
 	end
 	if Online then
 		if Status == "<Away>" then
@@ -305,14 +358,14 @@ end
 function RubyStuffSocial:UpdateLocalPlayer()
 	playerName, _ = UnitName("player")
 	if playerName then
-		playerStatus = '' -- todo available/busy/away
+		playerStatus = ''
 		if UnitIsAFK("player") then
 			playerStatus = "<Away>"
 		end
 		if UnitIsDND("player") then
 			playerStatus = "<Busy>"
 		end
-		self:UpdateNameEntry(playerName, UnitLevel("player"), UnitClass("player"), GetZoneText(), true, 3, playerStatus, '', nil, nil)
+		self:UpdateNameEntry(playerName, UnitLevel("player"), UnitClass("player"), GetZoneText(), true, 3, playerStatus, '', nil, -2, nil, -1)
 	end
 end
 
@@ -323,7 +376,12 @@ function RubyStuffSocial:UpdateFriendList()
 			-- sometimes the friend data hasn't fully downloaded yet if this gets fired on login; getting friend info at this point returns nil.
 			-- this check protects against a lua error from trying to populate the table with nil values
 		else
-			self:UpdateNameEntry(Name, Level, Class, Zone, Connected, 3, Status, '', nil, nil)
+			if Connected then
+				totalHoursOffline = -1
+			else
+				totalHoursOffline = nil
+			end
+			self:UpdateNameEntry(Name, Level, Class, Zone, Connected, 3, Status, '', nil, -1, nil, totalHoursOffline)
 		end
 	end
 end
@@ -337,23 +395,31 @@ function RubyStuffSocial:UpdateGuild()
 				-- this check protects against a lua error from trying to populate the table with nil values
 			else
 				yearsOffline, monthsOffline, daysOffline, hoursOffline = GetGuildRosterLastOnline(i)
+				totalHoursOffline = 0
 				offlineString = ""
 				if yearsOffline and yearsOffline > 0 then
 					offlineString = offlineString .. yearsOffline .. "y "
+					totalHoursOffline = totalHoursOffline + (yearsOffline*366*24)
 				end
 				if monthsOffline and monthsOffline > 0 then
 					offlineString = offlineString .. monthsOffline .. "m "
+					totalHoursOffline = totalHoursOffline + (monthsOffline*31*24)
 				end
 				if daysOffline and daysOffline > 0 then
 					offlineString = offlineString .. daysOffline .. "d "
+					totalHoursOffline = totalHoursOffline + (daysOffline*24)
 				end
 				if hoursOffline and hoursOffline > 0 then
 					offlineString = offlineString .. hoursOffline .. "h "
+					totalHoursOffline = totalHoursOffline + hoursOffline
 				end
 				if offlineString == "" then
 					offlineString = "< 1 hr"
 				end
-				self:UpdateNameEntry(Name, Level, Class, Zone, Online, 4, Status, Note, Rank, offlineString)
+				if Online then
+					totalHoursOffline = -1
+				end
+				self:UpdateNameEntry(Name, Level, Class, Zone, Online, 4, Status, Note, Rank, RankIndex, offlineString, totalHoursOffline)
 			end
 		end
 		guildName, guildRankName, _ = GetGuildInfo("player")
@@ -370,28 +436,88 @@ function RubyStuffSocial:UpdateGuild()
 	end
 end
 
-local function SortTable(a, b)
-	a_online = a[2]['online'] > 0
-	b_online = b[2]['online'] > 0
-	if a_online == b_online then
-		a_note = RubyStuffSocial:GetPlayerNote(a[2]['name'])
-		if not a_note then
-			a_note = ""
-		end
-		b_note = RubyStuffSocial:GetPlayerNote(b[2]['name'])
-		if not b_note then
-			b_note = ""
-		end
-		if a_note == b_note then
-			return a[1] < b[1]
-		elseif a_note == "" or b_note == "" then
-			return b_note == ""
+local sortingOrder = nil 
+local sortingReverse = nil 
+local sortingLastItem = nil
+
+function RubyStuffSocial:ResetSortingOrder()
+	sortingOrder = { [3]='online', [2]='note', [1]='name' }
+	sortingReverse = { [3]=false, [2]=false, [1]=false }
+	sortingLastItem = 3
+end
+
+function RubyStuffSocial:SelectSortColumn(but)
+	if sortingOrder[sortingLastItem] == but.sortColumnID then
+		if sortingReverse[sortingLastItem] then
+			sortingReverse[sortingLastItem] = false
 		else
-			return a_note < b_note
+			sortingReverse[sortingLastItem] = true
 		end
 	else
-		return a_online
+		sortingLastItem = sortingLastItem + 1
+		sortingOrder[sortingLastItem] = but.sortColumnID
+		sortingReverse[sortingLastItem] = false
 	end
+	self:UpdateFrame()
+end
+
+local function SortTable(a, b)
+	sortElement = sortingLastItem + 1
+	while sortElement > 1 do
+		sortElement = sortElement - 1
+		if sortingOrder[sortElement] == 'online' then
+			a_online = a[2]['online'] > 0
+			b_online = b[2]['online'] > 0
+			if not (a_online == b_online) then
+				if sortingReverse[sortElement] then
+					return b_online
+				else
+					return a_online
+				end
+			end
+		elseif sortingOrder[sortElement] == 'note' then
+			a_note = RubyStuffSocial:GetPlayerNote(a[2]['name'])
+			if not a_note then
+				a_note = ""
+			end
+			b_note = RubyStuffSocial:GetPlayerNote(b[2]['name'])
+			if not b_note then
+				b_note = ""
+			end
+			if not (a_note == b_note) then
+				if a_note == "" or b_note == "" then
+					if sortingReverse[sortElement] then
+						return a_note == ""
+					else
+						return b_note == ""
+					end
+				else
+					if sortingReverse[sortElement] then
+						return a_note > b_note
+					else
+						return a_note < b_note
+					end
+				end
+			end
+		elseif sortingOrder[sortElement] == 'name' then
+			if sortingReverse[sortElement] then
+				return a[1] > b[1]
+			else
+				return a[1] < b[1]
+			end
+		else
+			a_elem = a[2][sortingOrder[sortElement]]
+			b_elem = b[2][sortingOrder[sortElement]]
+			if not (a_elem == b_elem) then
+				if sortingReverse[sortElement] then
+					return a_elem > b_elem
+				else
+					return a_elem < b_elem
+				end
+			end
+		end
+	end
+	return false
 end
 
 function RubyStuffSocial:UpdateFrame()
@@ -503,7 +629,11 @@ function RubyStuffSocial:UpdateFrame()
 				FRAMES[k].text_NOTE:SetTextColor(0.7, 0.55, 0.4, 1)
 			end
 			-- other columns
-			FRAMES[k].text_LEVEL:SetText(v['level'])
+			if v['level'] > -1 then
+				FRAMES[k].text_LEVEL:SetText(v['level'])
+			else
+				FRAMES[k].text_LEVEL:SetText('')
+			end
 			FRAMES[k].text_CLASS:SetText(v['class'])
 			local classCol = RAID_CLASS_COLORS[v['class']]
 			FRAMES[k].text_CLASS:SetTextColor(classCol.r, classCol.g, classCol.b, 1)
@@ -515,7 +645,19 @@ function RubyStuffSocial:UpdateFrame()
 				FRAMES[k].text_ZONE:SetTextColor(1, 1, 1, 1)
 			end
 			-- rank
-			FRAMES[k].text_RANK:SetText(v['rank'])
+			if v['rankIndex'] == -3 then
+				FRAMES[k].text_RANK:SetText('(unknown)')
+				FRAMES[k].text_RANK:SetTextColor(1, 0, 0, 1)
+			elseif v['rankIndex'] == -2 then
+				FRAMES[k].text_RANK:SetText('(self)')
+				FRAMES[k].text_RANK:SetTextColor(0, 1, 0, 1)
+			elseif v['rankIndex'] == -1 then
+				FRAMES[k].text_RANK:SetText('(friend)')
+				FRAMES[k].text_RANK:SetTextColor(1, 1, 0, 1)
+			else
+				FRAMES[k].text_RANK:SetText(v['rank'])
+				FRAMES[k].text_RANK:SetTextColor(1, 1, 1, 1)
+			end
 			-- set text alpha
 			local targetAlpha = 1
 			if v['online'] < 1 then
@@ -548,6 +690,11 @@ function RubyStuffSocial:OnWhisperButtonClick()
 	if selectedName then
 		ChatFrame_OpenChat("/w " .. selectedName .. " ")
 	end
+end
+
+function RubyStuffSocial:OnResetSortButtonClick()
+	self:ResetSortingOrder()
+	self:UpdateEverything()
 end
 
 function RubyStuffSocial:OnEditNoteButtonClick()
