@@ -1,5 +1,0 @@
-<Bindings>
-	<Binding name="RubyStuff_SocialManager_Toggle" header="RubyStuffSocial">
-		RubyStuffSocial:Toggle()
-	</Binding>
-</Bindings>

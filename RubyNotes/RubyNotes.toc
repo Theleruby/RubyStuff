@@ -1,8 +1,8 @@
 ## Interface: 30300
-## Title: RubyStuff Social |cff8080ff2.0.6|r
+## Title: RubyNotes |cff8080ff2.0.6a|r
 ## Author: Theleruby
-## Version: 2.0.6
-## Notes: Social manager for World of Warcraft
+## Version: 2.0.6a
+## Notes: Social manager which allows you to set custom notes for your friends and guildmates
 ## X-Embeds: Ace3
 ## RequiredDeps: Prat-3.0
 ## DefaultState: Enabled
@@ -10,4 +10,4 @@
 ## LoadWith: Prat-3.0
 ## SavedVariables: CustomPlayerNotes
 embeds.xml
-RubyStuffSocial.lua
+RubyNotes.lua

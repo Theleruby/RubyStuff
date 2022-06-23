@@ -1,0 +1,5 @@
+<Bindings>
+	<Binding name="RubyNotes_SocialManager_Toggle" header="RubyNotes">
+		RubyNotes:Toggle()
+	</Binding>
+</Bindings>

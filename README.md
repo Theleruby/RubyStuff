@@ -5,8 +5,8 @@ The addons made here were created for my own personal use to make my life easier
 
 To install or update the addons, download the repo from GitHub as a zip file and put the addons you want into the AddOns folder.
 
-## RubyStuff Social
-**Last update:** 2.0.6 (22 June 2022)
+## RubyNotes
+**Last update:** 2.0.6a (23 June 2022)
 
 **Dependencies:** Prat-3.0
 

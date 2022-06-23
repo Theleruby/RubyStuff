@@ -2,23 +2,23 @@
 -- Globals
 -------------------------------------------------------
 
-RubyStuffSocial = LibStub("AceAddon-3.0"):NewAddon("RubyStuffSocial", "AceConsole-3.0", "AceEvent-3.0", "AceHook-3.0")
+RubyNotes = LibStub("AceAddon-3.0"):NewAddon("RubyNotes", "AceConsole-3.0", "AceEvent-3.0", "AceHook-3.0")
 
-BINDING_HEADER_RubyStuffSocial = "RubyStuff Social"
-BINDING_NAME_RubyStuff_SocialManager_Toggle = "Toggle RubyStuff Social List"
+BINDING_HEADER_RubyNotes = "RubyNotes"
+BINDING_NAME_RubyNotes_SocialManager_Toggle = "Toggle Social List"
 
-StaticPopupDialogs["RUBYSTUFF_EDIT_PLAYER_CUSTOM_NOTE"] = {
+StaticPopupDialogs["RUBYNOTES_EDIT_PLAYER_CUSTOM_NOTE"] = {
 	text = "Enter a new custom note",
 	button1 = TEXT(ACCEPT),
 	button2 = TEXT(CANCEL),
 	OnAccept = function(dialog)
-		RubyStuffSocial:UpdateNoteFromEditBox(dialog.editBox:GetText())
+		RubyNotes:UpdateNoteFromEditBox(dialog.editBox:GetText())
 	end,
 	OnCancel = function() end,
 	EditBoxOnEnterPressed = function()
 		local text = getglobal(this:GetParent():GetName().."EditBox"):GetText();
 		this:GetParent():Hide();
-		RubyStuffSocial:UpdateNoteFromEditBox(text)
+		RubyNotes:UpdateNoteFromEditBox(text)
 	end,
 	EditBoxOnEscapePressed = function()
 		this:GetParent():Hide();
@@ -35,7 +35,7 @@ StaticPopupDialogs["RUBYSTUFF_EDIT_PLAYER_CUSTOM_NOTE"] = {
 -------------------------------------------------------
 
 Prat:AddModuleToLoad(function()
-	local PRAT_MODULE = Prat:RequestModuleName("RubyStuffSocial")
+	local PRAT_MODULE = Prat:RequestModuleName("RubyNotes")
 
 	if PRAT_MODULE == nil then
 		return 
@@ -45,16 +45,16 @@ Prat:AddModuleToLoad(function()
 
 	function module:OnModuleEnable()
 		Prat.RegisterChatEvent(self, "Prat_PreAddMessage")
-		Prat.RegisterMessageItem('RUBYSTUFF', 'Pp')
+		Prat.RegisterMessageItem('RUBYNOTES', 'Pp')
 	end
 
 	function module:OnModuleDisable()
 	end
 	
 	function module:Prat_PreAddMessage(e, message, frame, event)
-		databasedName = RubyStuffSocial:GetPlayerNote(message.PLAYERLINK)
+		databasedName = RubyNotes:GetPlayerNote(message.PLAYERLINK)
 		if databasedName and (not (databasedName == message.PLAYERLINK or databasedName == "")) then
-			message.RUBYSTUFF = Prat.CLR:Colorize('ffefa3', string.format(' (%s)', databasedName))
+			message.RUBYNOTES = Prat.CLR:Colorize('ffefa3', string.format(' (%s)', databasedName))
 		end
 	end
 end)
@@ -64,7 +64,7 @@ end)
 -------------------------------------------------------
 
 local NAME_DATABASE = {}
-local managerFrame = CreateFrame("Frame", "RubyStuffSocialManager_Frame", UIParent)
+local managerFrame = CreateFrame("Frame", "RubyNotes_SocialManager_Frame", UIParent)
 local selectedName = nil
 local nameBeingEdited = nil
 local FRAMES = {}
@@ -88,7 +88,7 @@ local RAID_CLASS_COLORS = {
 
 ----- SETUP METHODS
 
-function RubyStuffSocial:OnInitialize()
+function RubyNotes:OnInitialize()
 	self:SetupFrame()
 	self:PrepopulateDatabase()
 	self:RegisterEvent("FRIENDLIST_UPDATE", "UpdateEverything")
@@ -103,10 +103,10 @@ function RubyStuffSocial:OnInitialize()
 	self:UpdateEverything()
 end
 
-function RubyStuffSocial:SetupFrame()
+function RubyNotes:SetupFrame()
 	managerFrame:Hide()
 	playerName, _ = UnitName("player")
-	tinsert(UISpecialFrames, "RubyStuffSocialManager_Frame")
+	tinsert(UISpecialFrames, "RubyNotes_SocialManager_Frame")
 	-- Base frame
 	managerFrame:SetPoint("TOPLEFT",UIParent,"CENTER",-440,200)
 	managerFrame:SetPoint("BOTTOMRIGHT",UIParent,"CENTER",440,-200)
@@ -116,8 +116,8 @@ function RubyStuffSocial:SetupFrame()
 		insets = { left = 5, right = 5, top = 5, bottom = 5 }});
 	managerFrame:EnableMouse(1)
 	managerFrame:RegisterForDrag("LeftButton", "RightButton")
-	managerFrame:SetScript("OnShow", RubyStuffSocialManager_OnFrameShow)
-	managerFrame:SetScript("OnHide", RubyStuffSocialManager_OnFrameHide)
+	managerFrame:SetScript("OnShow", RubyNotes_SocialManager_OnFrameShow)
+	managerFrame:SetScript("OnHide", RubyNotes_SocialManager_OnFrameHide)
 	-- Title
 	managerFrame.title = managerFrame:CreateFontString(nil, "ARTWORK", "GameTooltipText")
 	managerFrame.title:SetPoint("TOPLEFT", 8, -10)
@@ -132,13 +132,13 @@ function RubyStuffSocial:SetupFrame()
 	managerFrame.line:SetPoint("TOPLEFT",4,-30)
 	managerFrame.line:SetSize(872, 1)
 	-- Exit button
-	local exitButton = CreateFrame("Button", "RubyStuffSocialManager_ExitButton", managerFrame, "UIPanelButtonTemplate")
+	local exitButton = CreateFrame("Button", "RubyNotes_SocialManager_ExitButton", managerFrame, "UIPanelButtonTemplate")
 	exitButton:SetSize(40, 24)
 	exitButton:SetText("X")
 	exitButton:SetPoint("TOPRIGHT", managerFrame, "TOPRIGHT", -4, -4)
 	exitButton:SetScript("OnClick", function() managerFrame:Hide() end)
 	-- Scroll frame
-	managerFrame.scrollFrame = CreateFrame("ScrollFrame", "RubyStuffSocialManager_ScrollFrame", managerFrame, "UIPanelScrollFrameTemplate")
+	managerFrame.scrollFrame = CreateFrame("ScrollFrame", "RubyNotes_SocialManager_ScrollFrame", managerFrame, "UIPanelScrollFrameTemplate")
 	managerFrame.scrollChild = CreateFrame("Frame")
 	-- Create scroll bar elements
 	local scrollbarName = managerFrame.scrollFrame:GetName()
@@ -165,29 +165,29 @@ function RubyStuffSocial:SetupFrame()
 	managerFrame.line2:SetPoint("BOTTOMLEFT",4,30)
 	managerFrame.line2:SetSize(872, 1)
 	-- Some buttons
-	managerFrame.removeNoteButton = CreateFrame("Button", "RubyStuffSocialManager_RemoveNoteButton", managerFrame, "UIPanelButtonTemplate")
+	managerFrame.removeNoteButton = CreateFrame("Button", "RubyNotes_SocialManager_RemoveNoteButton", managerFrame, "UIPanelButtonTemplate")
 	managerFrame.removeNoteButton:SetText("Remove note")
 	managerFrame.removeNoteButton:SetPoint("BOTTOMRIGHT", managerFrame, "BOTTOMRIGHT", -4, 5)
 	managerFrame.removeNoteButton:SetSize(120, 24) -- width, height
-	managerFrame.removeNoteButton:SetScript("OnClick", function() RubyStuffSocial:OnRemoveNoteButtonClick() end)
+	managerFrame.removeNoteButton:SetScript("OnClick", function() RubyNotes:OnRemoveNoteButtonClick() end)
 	managerFrame.removeNoteButton:Disable()
-	managerFrame.changeNoteButton = CreateFrame("Button", "RubyStuffSocialManager_EditNoteButton", managerFrame, "UIPanelButtonTemplate")
+	managerFrame.changeNoteButton = CreateFrame("Button", "RubyNotes_SocialManager_EditNoteButton", managerFrame, "UIPanelButtonTemplate")
 	managerFrame.changeNoteButton:SetText("Edit note")
 	managerFrame.changeNoteButton:SetPoint("BOTTOMRIGHT", managerFrame, "BOTTOMRIGHT", -122, 5)
 	managerFrame.changeNoteButton:SetSize(80, 24) -- width, height
-	managerFrame.changeNoteButton:SetScript("OnClick", function() RubyStuffSocial:OnEditNoteButtonClick() end)
+	managerFrame.changeNoteButton:SetScript("OnClick", function() RubyNotes:OnEditNoteButtonClick() end)
 	managerFrame.changeNoteButton:Disable()
-	managerFrame.whisperButton = CreateFrame("Button", "RubyStuffSocialManager_EditNoteButton", managerFrame, "UIPanelButtonTemplate")
+	managerFrame.whisperButton = CreateFrame("Button", "RubyNotes_SocialManager_EditNoteButton", managerFrame, "UIPanelButtonTemplate")
 	managerFrame.whisperButton:SetText("Whisper")
 	managerFrame.whisperButton:SetPoint("BOTTOMLEFT", managerFrame, "BOTTOMLEFT", 3, 5)
 	managerFrame.whisperButton:SetSize(80, 24) -- width, height
-	managerFrame.whisperButton:SetScript("OnClick", function() RubyStuffSocial:OnWhisperButtonClick() end)
+	managerFrame.whisperButton:SetScript("OnClick", function() RubyNotes:OnWhisperButtonClick() end)
 	managerFrame.whisperButton:Disable()
-	managerFrame.resetSortButton = CreateFrame("Button", "RubyStuffSocialManager_RemoveNoteButton", managerFrame, "UIPanelButtonTemplate")
+	managerFrame.resetSortButton = CreateFrame("Button", "RubyNotes_SocialManager_RemoveNoteButton", managerFrame, "UIPanelButtonTemplate")
 	managerFrame.resetSortButton:SetText("Reset sort order")
 	managerFrame.resetSortButton:SetPoint("BOTTOMLEFT", managerFrame, "BOTTOMLEFT", 82, 5)
 	managerFrame.resetSortButton:SetSize(120, 24) -- width, height
-	managerFrame.resetSortButton:SetScript("OnClick", function() RubyStuffSocial:OnResetSortButtonClick() end)
+	managerFrame.resetSortButton:SetScript("OnClick", function() RubyNotes:OnResetSortButtonClick() end)
 	managerFrame:SetFrameStrata(HIGH)
 	-- Line3
 	managerFrame.line3 = managerFrame:CreateTexture()
@@ -208,18 +208,18 @@ function RubyStuffSocial:SetupFrame()
 	managerFrame.line4:SetSize(872, 1)
 	-- Sort Buttons
 	managerFrame.sortButtons = {}
-	managerFrame.sortButtons['name'] = RubyStuffSocial:CreateSortButton(managerFrame, 'name', 84, 8, 'Name')
-	managerFrame.sortButtons['online'] = RubyStuffSocial:CreateSortButton(managerFrame, 'online', 10, 96, '-')
-	managerFrame.sortButtons['totalHoursOffline'] = RubyStuffSocial:CreateSortButton(managerFrame, 'totalHoursOffline', 86, 106, 'Last Online')
-	managerFrame.sortButtons['rankIndex'] = RubyStuffSocial:CreateSortButton(managerFrame, 'rankIndex', 86, 196, 'Rank')
-	managerFrame.sortButtons['note'] = RubyStuffSocial:CreateSortButton(managerFrame, 'note', 232, 286, 'Note')
-	managerFrame.sortButtons['level'] = RubyStuffSocial:CreateSortButton(managerFrame, 'level', 30, 522, 'Lv')
-	managerFrame.sortButtons['class'] = RubyStuffSocial:CreateSortButton(managerFrame, 'class', 96, 556, 'Class')
-	managerFrame.sortButtons['location'] = RubyStuffSocial:CreateSortButton(managerFrame, 'location', 186, 656, 'Zone')
-	RubyStuffSocial:ResetSortingOrder()
+	managerFrame.sortButtons['name'] = RubyNotes:CreateSortButton(managerFrame, 'name', 84, 8, 'Name')
+	managerFrame.sortButtons['online'] = RubyNotes:CreateSortButton(managerFrame, 'online', 10, 96, '-')
+	managerFrame.sortButtons['totalHoursOffline'] = RubyNotes:CreateSortButton(managerFrame, 'totalHoursOffline', 86, 106, 'Last Online')
+	managerFrame.sortButtons['rankIndex'] = RubyNotes:CreateSortButton(managerFrame, 'rankIndex', 86, 196, 'Rank')
+	managerFrame.sortButtons['note'] = RubyNotes:CreateSortButton(managerFrame, 'note', 232, 286, 'Note')
+	managerFrame.sortButtons['level'] = RubyNotes:CreateSortButton(managerFrame, 'level', 30, 522, 'Lv')
+	managerFrame.sortButtons['class'] = RubyNotes:CreateSortButton(managerFrame, 'class', 96, 556, 'Class')
+	managerFrame.sortButtons['location'] = RubyNotes:CreateSortButton(managerFrame, 'location', 186, 656, 'Zone')
+	RubyNotes:ResetSortingOrder()
 end
 
-function RubyStuffSocial:CreateSortButton(managerFrame, sortColumnID, width, xposition, title)
+function RubyNotes:CreateSortButton(managerFrame, sortColumnID, width, xposition, title)
 	but = CreateFrame("Button", nil, managerFrame)
 	but.sortColumnID = sortColumnID
 	but:SetSize(width, 18)
@@ -232,7 +232,7 @@ function RubyStuffSocial:CreateSortButton(managerFrame, sortColumnID, width, xpo
 	but.highlightTexture:SetAllPoints(true)
 	but.highlightTexture:SetTexture(0.5, 0.5, 0.5, 0.5)
 	but.highlightTexture:Hide()
-	but:SetScript("OnClick", function(self) RubyStuffSocial:SelectSortColumn(self) end)
+	but:SetScript("OnClick", function(self) RubyNotes:SelectSortColumn(self) end)
 	but:SetScript("OnEnter", function(self) self.highlightTexture:Show() end)
 	but:SetScript("OnLeave", function(self) self.highlightTexture:Hide() end)
 	but:EnableMouse(1)
@@ -243,13 +243,13 @@ function RubyStuffSocial:CreateSortButton(managerFrame, sortColumnID, width, xpo
 	return but
 end
 
-function RubyStuffSocial:ResetGuildMotd()
+function RubyNotes:ResetGuildMotd()
 	managerFrame.guildName:SetText("|cff808080Guild information unavailable")
 	managerFrame.motd:SetText("")
 end
 
-function RubyStuffSocial:PrepopulateDatabase()
-	RubyStuffSocial:ResetGuildMotd()
+function RubyNotes:PrepopulateDatabase()
+	RubyNotes:ResetGuildMotd()
 	if not CustomPlayerNotes then
 		CustomPlayerNotes = {}
 	end
@@ -260,7 +260,7 @@ end
 
 ----- GET / SET NOTE
 
-function RubyStuffSocial:EnsurePlayerExists(player)
+function RubyNotes:EnsurePlayerExists(player)
 	if not NAME_DATABASE[player] then
 		NAME_DATABASE[player] = {
 			['name'] = player,
@@ -278,7 +278,7 @@ function RubyStuffSocial:EnsurePlayerExists(player)
 	end
 end
 
-function RubyStuffSocial:GetPlayerNote(player)
+function RubyNotes:GetPlayerNote(player)
 	if CustomPlayerNotes[player] then
 		return CustomPlayerNotes[player]
 	elseif NAME_DATABASE[player] then
@@ -288,7 +288,7 @@ function RubyStuffSocial:GetPlayerNote(player)
 	end
 end
 
-function RubyStuffSocial:SetCustomPlayerNote(player, note)
+function RubyNotes:SetCustomPlayerNote(player, note)
 	self:EnsurePlayerExists(player)
 	--if note == "" then
 	--   note = nil
@@ -298,23 +298,23 @@ end
 
 ----- BACKGROUND UPDATES
 
-function RubyStuffSocial:RequestUpdatesFromServer()
+function RubyNotes:RequestUpdatesFromServer()
 	ShowFriends()
 	if IsInGuild() then
 		GuildRoster()
 	end
 end
 
-function RubyStuffSocial:UpdateEverything()
+function RubyNotes:UpdateEverything()
 	NAME_DATABASE = {}
-	RubyStuffSocial:PrepopulateDatabase()
-	RubyStuffSocial:UpdateGuild()
-	RubyStuffSocial:UpdateFriendList()
-	RubyStuffSocial:UpdateLocalPlayer()
-	RubyStuffSocial:UpdateFrame()
+	RubyNotes:PrepopulateDatabase()
+	RubyNotes:UpdateGuild()
+	RubyNotes:UpdateFriendList()
+	RubyNotes:UpdateLocalPlayer()
+	RubyNotes:UpdateFrame()
 end
 
-function RubyStuffSocial:UpdateNameEntry(Name, Level, Class, Zone, Online, AvailableValue, Status, Note, Rank, RankIndex, offlineString, totalHoursOffline)
+function RubyNotes:UpdateNameEntry(Name, Level, Class, Zone, Online, AvailableValue, Status, Note, Rank, RankIndex, offlineString, totalHoursOffline)
 	if (not Name) or (Name == "") then
 		return
 	end
@@ -355,7 +355,7 @@ function RubyStuffSocial:UpdateNameEntry(Name, Level, Class, Zone, Online, Avail
 	end
 end
 
-function RubyStuffSocial:UpdateLocalPlayer()
+function RubyNotes:UpdateLocalPlayer()
 	playerName, _ = UnitName("player")
 	if playerName then
 		playerStatus = ''
@@ -369,7 +369,7 @@ function RubyStuffSocial:UpdateLocalPlayer()
 	end
 end
 
-function RubyStuffSocial:UpdateFriendList()
+function RubyNotes:UpdateFriendList()
 	for i = 1, GetNumFriends() do
 		Name, Level, Class, Zone, Connected, Status = GetFriendInfo(i)
 		if Name == nil then
@@ -386,7 +386,7 @@ function RubyStuffSocial:UpdateFriendList()
 	end
 end
 
-function RubyStuffSocial:UpdateGuild()
+function RubyNotes:UpdateGuild()
 	if IsInGuild() then
 		for i = 1, GetNumGuildMembers(true) do
 			Name, Rank, RankIndex, Level, Class, Zone, Note, OfficerNote, Online, Status, ClassFileName = GetGuildRosterInfo(i)
@@ -440,13 +440,13 @@ local sortingOrder = nil
 local sortingReverse = nil 
 local sortingLastItem = nil
 
-function RubyStuffSocial:ResetSortingOrder()
+function RubyNotes:ResetSortingOrder()
 	sortingOrder = { [3]='online', [2]='note', [1]='name' }
 	sortingReverse = { [3]=false, [2]=false, [1]=false }
 	sortingLastItem = 3
 end
 
-function RubyStuffSocial:SelectSortColumn(but)
+function RubyNotes:SelectSortColumn(but)
 	if sortingOrder[sortingLastItem] == but.sortColumnID then
 		if sortingReverse[sortingLastItem] then
 			sortingReverse[sortingLastItem] = false
@@ -476,11 +476,11 @@ local function SortTable(a, b)
 				end
 			end
 		elseif sortingOrder[sortElement] == 'note' then
-			a_note = RubyStuffSocial:GetPlayerNote(a[2]['name'])
+			a_note = RubyNotes:GetPlayerNote(a[2]['name'])
 			if not a_note then
 				a_note = ""
 			end
-			b_note = RubyStuffSocial:GetPlayerNote(b[2]['name'])
+			b_note = RubyNotes:GetPlayerNote(b[2]['name'])
 			if not b_note then
 				b_note = ""
 			end
@@ -520,7 +520,7 @@ local function SortTable(a, b)
 	return false
 end
 
-function RubyStuffSocial:UpdateFrame()
+function RubyNotes:UpdateFrame()
 	if managerFrame:IsVisible() then
 		-- Data
 		local foundSelectedName = not selectedName
@@ -576,7 +576,7 @@ function RubyStuffSocial:UpdateFrame()
 				FRAMES[k].highlightTexture:SetAllPoints(true)
 				FRAMES[k].highlightTexture:SetTexture(0.5, 0.5, 0.5, 0.5)
 				FRAMES[k].highlightTexture:Hide()
-				FRAMES[k]:SetScript("OnClick", function(self) RubyStuffSocial:SelectElement(self.playerName) end)
+				FRAMES[k]:SetScript("OnClick", function(self) RubyNotes:SelectElement(self.playerName) end)
 				FRAMES[k]:SetScript("OnEnter", function(self) self.highlightTexture:Show() end)
 				FRAMES[k]:SetScript("OnLeave", function(self) self.highlightTexture:Hide() end)
 			end
@@ -686,24 +686,24 @@ end
 
 ----- UI FRAME METHODS
 
-function RubyStuffSocial:OnWhisperButtonClick()
+function RubyNotes:OnWhisperButtonClick()
 	if selectedName then
 		ChatFrame_OpenChat("/w " .. selectedName .. " ")
 	end
 end
 
-function RubyStuffSocial:OnResetSortButtonClick()
+function RubyNotes:OnResetSortButtonClick()
 	self:ResetSortingOrder()
 	self:UpdateEverything()
 end
 
-function RubyStuffSocial:OnEditNoteButtonClick()
+function RubyNotes:OnEditNoteButtonClick()
 	nameBeingEdited = selectedName
-	StaticPopupDialogs["RUBYSTUFF_EDIT_PLAYER_CUSTOM_NOTE"].text = "Enter a new custom note for " .. nameBeingEdited
-	StaticPopup_Show("RUBYSTUFF_EDIT_PLAYER_CUSTOM_NOTE")
+	StaticPopupDialogs["RUBYNOTES_EDIT_PLAYER_CUSTOM_NOTE"].text = "Enter a new custom note for " .. nameBeingEdited
+	StaticPopup_Show("RUBYNOTES_EDIT_PLAYER_CUSTOM_NOTE")
 end
 
-function RubyStuffSocial:OnRemoveNoteButtonClick()
+function RubyNotes:OnRemoveNoteButtonClick()
 	if selectedName then
 		self:SetCustomPlayerNote(selectedName, nil)
 	end
@@ -711,7 +711,7 @@ function RubyStuffSocial:OnRemoveNoteButtonClick()
 	self:UpdateEverything()
 end
 
-function RubyStuffSocial:UpdateNoteFromEditBox(note)
+function RubyNotes:UpdateNoteFromEditBox(note)
 	if nameBeingEdited then
 		self:SetCustomPlayerNote(nameBeingEdited, note)
 	end
@@ -719,7 +719,7 @@ function RubyStuffSocial:UpdateNoteFromEditBox(note)
 	self:UpdateEverything()
 end
 
-function RubyStuffSocial:Toggle()
+function RubyNotes:Toggle()
 	if managerFrame:IsShown() then
 		managerFrame:Hide()
 	else
@@ -727,18 +727,18 @@ function RubyStuffSocial:Toggle()
 	end
 end
 
-function RubyStuffSocialManager_OnFrameShow()
-	RubyStuffSocial:SelectElement(nil)
+function RubyNotes_SocialManager_OnFrameShow()
+	RubyNotes:SelectElement(nil)
 	PlaySound("igCharacterInfoOpen")
-	RubyStuffSocial:RequestUpdatesFromServer()
-	RubyStuffSocial:UpdateEverything()
+	RubyNotes:RequestUpdatesFromServer()
+	RubyNotes:UpdateEverything()
 end
 
-function RubyStuffSocialManager_OnFrameHide()
+function RubyNotes_SocialManager_OnFrameHide()
 	PlaySound("igCharacterInfoClose")
 end
 
-function RubyStuffSocial:SelectElement(name)
+function RubyNotes:SelectElement(name)
 	selectedName = name
 	if selectedName then
 		if CustomPlayerNotes[selectedName] then
