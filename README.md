@@ -1,9 +1,7 @@
 # RubyStuff
-This repo contains addons I've written for World of Warcraft: Wrath of the Lich King (3.3.5a client version). This is mostly a work-in-progress, so expect bugs. I'm also new to writing lua as well as WoW addons, so things might be written kinda badly for now.
+This repo contains addons I've written for World of Warcraft: Wrath of the Lich King (3.3.5a client version). The addons are mostly a work-in-progress, so expect bugs. I'm also new to writing lua as well as WoW addons, so things might be written kinda badly for now. I'll try to improve the code quality over time.
 
-Feel free to make feature requests and report bugs. I'll try to fix anything reported and improve the code quality over time.
-
-Everything here is public domain (at least the parts I wrote) so you can also do what you want with it.
+The addons made here were created for my own personal use to make my life easier. I intend to maintain them on that basis. Feel free to make feature requests and report bugs, but I don't guarantee to fix anything or add any new features (it depends on my free time). Everything here is public domain (at least the parts I wrote) so you can also do what you want with it, fork it, rebrand it, whatever. Go nuts.
 
 To install or update the addons, download the repo from GitHub as a zip file and put the addons you want into the AddOns folder.
 
