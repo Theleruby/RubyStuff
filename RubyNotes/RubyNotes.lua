@@ -325,7 +325,7 @@ function RubyNotes:UpdateNameEntry(Name, Level, Class, Zone, Online, AvailableVa
 	if Level > 0 then
 		NAME_DATABASE[Name]['class'] = Class
 		NAME_DATABASE[Name]['level'] = Level
-		NAME_DATABASE[Name]['location'] = Zone
+		NAME_DATABASE[Name]['location'] = RubyNotes:FixZoneText(Zone)
 	end
 	if Rank then
 		NAME_DATABASE[Name]['rank'] = Rank
@@ -353,6 +353,15 @@ function RubyNotes:UpdateNameEntry(Name, Level, Class, Zone, Online, AvailableVa
 	else
 		NAME_DATABASE[Name]['online'] = 0
 	end
+end
+
+function RubyNotes:FixZoneText(zoneText)
+	-- for some reason blizzard zone texts are sometimes mismatching depending on the source.
+	-- so we fix this!
+	if zoneText == "The Molten Core" then
+		zoneText = "Molten Core"
+	end
+	return zoneText
 end
 
 function RubyNotes:UpdateLocalPlayer()
@@ -525,7 +534,7 @@ function RubyNotes:UpdateFrame()
 		-- Data
 		local foundSelectedName = not selectedName
 		local pName, pRealm = UnitName("player")
-		local zone = GetZoneText()
+		local zone = RubyNotes:FixZoneText(GetZoneText())
 		-- Hide all the existing frames
 		for k, v in pairs(FRAMES) do 
 			v:Hide()
