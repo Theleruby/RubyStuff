@@ -374,7 +374,7 @@ function RubyNotes:UpdateLocalPlayer()
 		if UnitIsDND("player") then
 			playerStatus = "<Busy>"
 		end
-		self:UpdateNameEntry(playerName, UnitLevel("player"), UnitClass("player"), GetZoneText(), true, 3, playerStatus, '', nil, -2, nil, -1)
+		self:UpdateNameEntry(playerName, UnitLevel("player"), UnitClass("player"), GetZoneText(), true, 3, playerStatus, nil, nil, -2, nil, -1)
 	end
 end
 
@@ -390,7 +390,7 @@ function RubyNotes:UpdateFriendList()
 			else
 				totalHoursOffline = nil
 			end
-			self:UpdateNameEntry(Name, Level, Class, Zone, Connected, 3, Status, '', nil, -1, nil, totalHoursOffline)
+			self:UpdateNameEntry(Name, Level, Class, Zone, Connected, 3, Status, nil, nil, -1, nil, totalHoursOffline)
 		end
 	end
 end

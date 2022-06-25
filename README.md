@@ -8,7 +8,7 @@ Please note that addons are written for and tested on English clients only. Many
 To install or update the addons, download the repo from GitHub as a zip file and put the addons you want into the AddOns folder.
 
 ## RubyNotes
-**Last update:** 2.0.7 (24 June 2022)
+**Last update:** 2.0.8 (25 June 2022)
 
 **Dependencies:** Prat-3.0
 
