@@ -68,19 +68,6 @@ local managerFrame = CreateFrame("Frame", "RubyNotes_SocialManager_Frame", UIPar
 local selectedName = nil
 local nameBeingEdited = nil
 local FRAMES = {}
-local RAID_CLASS_COLORS = {
-	["Druid"] = { r = 1, g = 0.49, b = 0.04, },
-	["Hunter"] = { r = 0.67, g = 0.83, b = 0.45 },
-	["Mage"] = { r = 0.41, g = 0.8, b = 0.41 },
-	["Paladin"] = { r = 0.96, g = 0.55, b = 0.73 },
-	["Priest"] = { r = 1, g = 1, b = 1 },
-	["Rogue"] = { r = 1, g = 0.96, b = 0.41 },
-	["Shaman"] = { r = 0.14, g = 0.35, b = 1 },
-	["Warlock"] = { r = 0.58, g = 0.51, b = 0.79 },
-	["Warrior"] = { r = 0.78, g = 0.61, b = 0.43 },
-	["Unknown"] = { r = 1, g = 1, b = 1 },
-	[""] = { r = 1, g = 1, b = 1 },
-}
 
 -------------------------------------------------------
 -- Class Functions
@@ -360,6 +347,9 @@ function RubyNotes:FixZoneText(zoneText)
 	-- so we fix this!
 	if zoneText == "The Molten Core" then
 		zoneText = "Molten Core"
+	end
+	if zoneText == "City of Ironforge" then
+		zoneText = "Ironforge"
 	end
 	return zoneText
 end
@@ -644,8 +634,10 @@ function RubyNotes:UpdateFrame()
 				FRAMES[k].text_LEVEL:SetText('')
 			end
 			FRAMES[k].text_CLASS:SetText(v['class'])
-			local classCol = RAID_CLASS_COLORS[v['class']]
-			FRAMES[k].text_CLASS:SetTextColor(classCol.r, classCol.g, classCol.b, 1)
+			local classCol = _G.RAID_CLASS_COLORS[v['class']:upper()]
+			if classCol then
+				FRAMES[k].text_CLASS:SetTextColor(classCol.r, classCol.g, classCol.b, 1)
+			end
 			-- zone/location
 			FRAMES[k].text_ZONE:SetText(v['location'])
 			if zone == v['location'] then
