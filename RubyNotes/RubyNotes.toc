@@ -1,7 +1,7 @@
 ## Interface: 30300
-## Title: RubyNotes |cff8080ff2.0.9|r
+## Title: RubyNotes |cff8080ff2.0.10|r
 ## Author: Theleruby
-## Version: 2.0.9
+## Version: 2.0.10
 ## Notes: Social manager which allows you to set custom notes for your friends and guildmates
 ## X-Embeds: Ace3
 ## RequiredDeps: Prat-3.0

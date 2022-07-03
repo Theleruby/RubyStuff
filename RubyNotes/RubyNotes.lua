@@ -69,6 +69,15 @@ local selectedName = nil
 local nameBeingEdited = nil
 local FRAMES = {}
 
+-- reverse lookup: turns localized class names back into the untranslated class filename (e.g. "Death Knight" -> DEATHKNIGHT) used for class colour table
+local CLASS_FILES = {}
+for k, v in pairs(LOCALIZED_CLASS_NAMES_MALE) do
+	CLASS_FILES[v] = k
+end
+for k, v in pairs(LOCALIZED_CLASS_NAMES_FEMALE) do
+	CLASS_FILES[v] = k
+end
+
 -------------------------------------------------------
 -- Class Functions
 -------------------------------------------------------
@@ -170,9 +179,15 @@ function RubyNotes:SetupFrame()
 	managerFrame.whisperButton:SetSize(80, 24) -- width, height
 	managerFrame.whisperButton:SetScript("OnClick", function() RubyNotes:OnWhisperButtonClick() end)
 	managerFrame.whisperButton:Disable()
+	managerFrame.inviteButton = CreateFrame("Button", "RubyNotes_SocialManager_EditNoteButton", managerFrame, "UIPanelButtonTemplate")
+	managerFrame.inviteButton:SetText("Invite")
+	managerFrame.inviteButton:SetPoint("BOTTOMLEFT", managerFrame, "BOTTOMLEFT", 82, 5)
+	managerFrame.inviteButton:SetSize(80, 24) -- width, height
+	managerFrame.inviteButton:SetScript("OnClick", function() RubyNotes:OnInviteButtonClick() end)
+	managerFrame.inviteButton:Disable()
 	managerFrame.resetSortButton = CreateFrame("Button", "RubyNotes_SocialManager_RemoveNoteButton", managerFrame, "UIPanelButtonTemplate")
 	managerFrame.resetSortButton:SetText("Reset sort order")
-	managerFrame.resetSortButton:SetPoint("BOTTOMLEFT", managerFrame, "BOTTOMLEFT", 82, 5)
+	managerFrame.resetSortButton:SetPoint("BOTTOMLEFT", managerFrame, "BOTTOMLEFT", 161, 5)
 	managerFrame.resetSortButton:SetSize(120, 24) -- width, height
 	managerFrame.resetSortButton:SetScript("OnClick", function() RubyNotes:OnResetSortButtonClick() end)
 	managerFrame:SetFrameStrata(HIGH)
@@ -634,7 +649,7 @@ function RubyNotes:UpdateFrame()
 				FRAMES[k].text_LEVEL:SetText('')
 			end
 			FRAMES[k].text_CLASS:SetText(v['class'])
-			local classCol = _G.RAID_CLASS_COLORS[v['class']:upper()]
+			local classCol = _G.RAID_CLASS_COLORS[CLASS_FILES[v['class']]]
 			if classCol then
 				FRAMES[k].text_CLASS:SetTextColor(classCol.r, classCol.g, classCol.b, 1)
 			end
@@ -693,6 +708,12 @@ function RubyNotes:OnWhisperButtonClick()
 	end
 end
 
+function RubyNotes:OnInviteButtonClick()
+	if selectedName then
+		InviteUnit(selectedName)
+	end
+end
+
 function RubyNotes:OnResetSortButtonClick()
 	self:ResetSortingOrder()
 	self:UpdateEverything()
@@ -748,11 +769,19 @@ function RubyNotes:SelectElement(name)
 			managerFrame.removeNoteButton:Disable()
 		end
 		managerFrame.changeNoteButton:Enable()
-		managerFrame.whisperButton:Enable()
+		local pName, pRealm = UnitName("player")
+		if selectedName == pName then
+			managerFrame.whisperButton:Disable()
+			managerFrame.inviteButton:Disable()
+		else
+			managerFrame.whisperButton:Enable()
+			managerFrame.inviteButton:Enable()
+		end
 	else
 		managerFrame.removeNoteButton:Disable()
 		managerFrame.changeNoteButton:Disable()
 		managerFrame.whisperButton:Disable()
+		managerFrame.inviteButton:Disable()
 	end
 	self:UpdateFrame()
 end
